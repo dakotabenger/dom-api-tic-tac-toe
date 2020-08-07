@@ -203,4 +203,14 @@ window.addEventListener("DOMContentLoaded", event => {
     giveUpButton.disabled = true;
     newGameButton.disabled = false;
   });
+
+  resetButton.addEventListener("click", event => {
+      localStorage.removeItem("xScore");
+      localStorage.removeItem("oScore");
+      localStorage.removeItem("drawCount");
+      xScore = 0;
+      drawCount = 0;
+      oScore = 0;
+      updateScoreCount();
+  })
 })

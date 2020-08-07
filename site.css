@@ -10,10 +10,15 @@ button {
   margin: auto;
   width: 402px;
   background-color: lightcoral;
+  border-radius: 25px;
+  border: 2px solid #73AD21;
+
 }
 
 #outerShell {
   background-color: blue;
+  height: 100%;
+  widith: 100%;
 }
 
 #turn, #score-count {
