@@ -1,10 +1,24 @@
 let currentPlayerSymbol = "x";
 let squareValues = ["","","","","","","","",""];
 let winner = '';
+let xScore = 0;
+let drawCount = 0;
+let oScore = 0;
+const scoreCountEl = document.getElementById("score-count")
 const winnerEl = document.getElementById("game-status");
-const newGameButton = document.getElementById("new-game")
+const newGameButton = document.getElementById("new-game");
 const giveUpButton = document.getElementById("give-up");
+const resetButton = document.getElementById("score-count-button")
+const turnEl = document.getElementById("turn");
 
+function updateScoreCount() {
+    let scoreCount = `"X" has won ${xScore} games and "O" has won ${oScore} games with ${drawCount} draws`
+    scoreCountEl.innerHTML = `${scoreCount}`
+}
+
+function whosTurn() {
+    turnEl.innerHTML = `It is currently "${currentPlayerSymbol.toUpperCase()}"'s turn.`
+}
 
 // ====================================================================
 // endRound function - Announces winner and enables new game button
@@ -13,7 +27,13 @@ function endRound() {
     if (winner !== "") {
         newGameButton.disabled = false;
         localStorage.setItem("winner", winner);
+        (winner === "X") ? xScore++ : (winner === "O") ? oScore++ : drawCount++
+        console.log(xScore,oScore,drawCount);
+        localStorage.setItem("xScore",xScore);
+        localStorage.setItem("oScore",oScore);
+        localStorage.setItem("drawCount",drawCount);
         winnerEl.innerHTML = `WINNER: ${winner}`;
+        updateScoreCount();
     }
     if (winner === "None") {
         giveUpButton.disabled = true;
@@ -33,7 +53,7 @@ const checkGameStatus = () => {
             return;
         }
     }
-
+    
     for (let i = 0; i < (squareValues.length-6); i++) {
         if((squareValues[i] === squareValues[i+3]) && (squareValues[i] === squareValues[i+6]) && squareValues[i]) {
             winner = squareValues[i].toUpperCase();
@@ -41,21 +61,21 @@ const checkGameStatus = () => {
             return;
         }
     }
-
+    
     if(((squareValues[0] === squareValues[4]) && (squareValues[0] === squareValues[8])) || 
-        ((squareValues[2] === squareValues[4]) && (squareValues[2] === squareValues[6]) && squareValues[4])) {
+    ((squareValues[2] === squareValues[4]) && (squareValues[2] === squareValues[6]) && squareValues[4])) {
         winner = squareValues[4].toUpperCase();
         endRound()
         return;
     }
-
+    
     if(winner === '' && !squareValues.includes('')) {
         winner = 'None';
         endRound();
         return;
     }
     
-
+    
 }
 
 
@@ -63,51 +83,63 @@ const checkGameStatus = () => {
 // addEventListener - DOMContentLoader
 // ====================================================================
 window.addEventListener("DOMContentLoaded", event => {
-    
     const gameBoard = document.getElementById("tic-tac-toe-board");
     
-
+    
     // ====================================================================
     // onReload function
     // ====================================================================
+    
+    function onReload () {
         
-        function onReload () {
-            if("savedValues" in localStorage) {
-                squareValues = JSON.parse(localStorage.getItem("savedValues"));
-                currentPlayerSymbol = localStorage.getItem("next-turn");
-
-                if("winner" in localStorage) {
-                    winner = localStorage.getItem("winner");
-                    endRound();
-                } 
+        whosTurn();
+        if("savedValues" in localStorage) {
+            squareValues = JSON.parse(localStorage.getItem("savedValues"));
+            currentPlayerSymbol = localStorage.getItem("next-turn");
             
-                // console.log(typeof squareValues);
-
-                for(let i = 0; i < squareValues.length; i++) {
-                    if(squareValues[i] === "x") {
-                        let selectedSquare = document.getElementById(`square-${i}`);
-                        selectedSquare.innerHTML = 
-                        `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-x.svg">`
-                    } else if (squareValues[i] === "o") {
-                        let selectedSquare = document.getElementById(`square-${i}`);
-                        selectedSquare.innerHTML =
-                            `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-o.svg">`
-                    }
+            if("winner" in localStorage) {
+                winner = localStorage.getItem("winner");
+                if (winner !== "") {
+                    newGameButton.disabled = false;
+                    winnerEl.innerHTML = `WINNER: ${winner}`;
+                }
+                
+            } 
+            
+            // console.log(typeof squareValues);
+            
+            for(let i = 0; i < squareValues.length; i++) {
+                if(squareValues[i] === "x") {
+                    let selectedSquare = document.getElementById(`square-${i}`);
+                    selectedSquare.innerHTML = 
+                    `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-x.svg">`
+                } else if (squareValues[i] === "o") {
+                    let selectedSquare = document.getElementById(`square-${i}`);
+                    selectedSquare.innerHTML =
+                    `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-o.svg">`
                 }
             }
-
         }
-    
-        onReload();
-   
-
-    gameBoard.addEventListener("click", event => {
-        if (winner !== '') {
-            return; 
-        } 
+        if ("xScore" in localStorage) {
+            xScore = parseInt(localStorage.getItem("xScore"));
+            oScore = parseInt(localStorage.getItem("oScore"));
+            drawCount = parseInt(localStorage.getItem("drawCount"));
+            console.log(xScore,oScore,drawCount);
+        }
+        updateScoreCount();
+        }
         
-        let id = event.target.id;
-        console.log(id);
+        onReload();
+        
+        
+        gameBoard.addEventListener("click", event => {
+            
+            if (winner !== '') {
+                return; 
+            } 
+            
+            let id = event.target.id;
+            console.log(id);
         if (id.includes("square-")) {
             let gridIndex = parseInt(id[id.length -1])
             if (squareValues[gridIndex] === "") {
@@ -117,7 +149,11 @@ window.addEventListener("DOMContentLoaded", event => {
                     squareValues[gridIndex] = currentPlayerSymbol;
                 if (currentPlayerSymbol === "o") {    
                     currentPlayerSymbol = "x";
-                } else {currentPlayerSymbol = "o"}
+                    whosTurn();
+                } else {
+                    currentPlayerSymbol = "o"
+                    whosTurn();    
+                }
             }
         }   
 

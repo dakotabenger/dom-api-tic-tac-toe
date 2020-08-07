@@ -9,6 +9,15 @@ button {
 #game {
   margin: auto;
   width: 402px;
+  background-color: lightcoral;
+}
+
+#outerShell {
+  background-color: blue;
+}
+
+#turn, #score-count {
+  font-weight: bolder;
 }
 
 #tic-tac-toe-board {
@@ -26,7 +35,7 @@ button {
 }
 
 .announcement {
-  font-size: 3em;
+  font-size: 2.5em;
   text-align: center;
 }
 
