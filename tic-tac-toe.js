@@ -1,7 +1,7 @@
 let playerSymbol = '';
 let computerSymbol = '';
 let computerTurn;
-let squareValues = ["","","","","","","","",""];
+let squareValues = ["x","","","","","","","",""];
 let winner = '';
 let playerScore = 0;
 let drawCount = 0;
@@ -12,6 +12,85 @@ const newGameButton = document.getElementById("new-game");
 const giveUpButton = document.getElementById("give-up");
 const resetButton = document.getElementById("score-count-button")
 const turnEl = document.getElementById("turn");
+
+function minimax(newBoard,player, depth = 0) {
+    let availableSpots = emptySquares();
+    console.log(availableSpots)
+    console.log((checkGameStatus(newBoard) ? 'true' : 'false'))
+    if (checkGameStatus(newBoard)) {
+        console.log((checkGameStatus(newBoard) === false))
+      return { score: (-10 + depth)}
+    } else if (checkGameStatus(newBoard)) {
+        console.log(checkGameStatus(newBoard))
+      return { score: (10 - depth)}
+    } else if (availableSpots.length === 0) {
+        console.log(availableSpots);
+      return { score: 0 }
+    }
+  
+    let moves = [];
+  
+    for (let i=0; i<availableSpots.length; i++) {
+      let move = {};
+      move.index = newBoard[availableSpots[i]];
+      newBoard[availableSpots[i]] = player;
+        console.log(availableSpots[i])
+      console.log(newBoard);
+      console.log(player,"outside");
+      if (player === computerSymbol) {
+        console.log(player,depth)
+        depth++
+        let result = minimax(newBoard, playerSymbol,depth + 1);
+        move.score = result.score;
+    } else {
+        console.log(player,depth,"else")
+        depth++
+        let result = minimax(newBoard, computerSymbol,depth + 1);
+        move.score = result.score;
+        
+      }
+  
+      newBoard[availableSpots[i]] = move.index;
+      moves.push(move);
+      console.log(moves,move)
+    } // end of for look
+  
+    let bestMove;
+  
+    
+        if (player === "x") {
+            let bestScore = -10000;
+            for (let i=0; i<moves.length; i++) {
+                if (moves[i].score > bestScore) {
+                    bestScore = moves[i].score;
+                    bestMove = i;
+                    // console.log(bestMove)
+            }
+            // end of for loop
+        }
+        if (player === "o") {
+            let bestScore = 10000;
+            for (let i=0; i<moves.length; i++) {
+                if (moves[i].score < bestScore) {
+                    bestScore = moves[i].score;
+                    bestMove = i;
+                    // console.log(bestMove)
+                }
+                
+            }
+              }
+        } 
+  
+    return moves[bestMove];
+  }
+
+  function botPicksSpot() {
+    return minimax(squareValues,computerSymbol).index;
+  }
+  
+  function emptySquares() {
+      return squareValues.filter(el => el === '').map( (el,index) => index)
+    }
 
 function updateScoreCount() {
     let scoreCount = `The computer has won ${computerScore} ${(computerScore === 1) ? "game" : "games"} and the player has won ${playerScore} ${(playerScore === 1) ? "game" : "games"} There ${(drawCount === 1 ? "has" : "have")} been ${drawCount} ${(drawCount === 1 ? "draw" : "draws")}`
@@ -49,39 +128,45 @@ function endRound() {
 // ====================================================================
 // checkGameStatus
 // ====================================================================
-const checkGameStatus = () => {
-    for(let i = 0; i < squareValues.length; i += 3) {
-        if((squareValues[i] === squareValues[i+1]) && (squareValues[i] === squareValues[i+2]) && squareValues[i]) {
-            winner = squareValues[i].toUpperCase();
+const checkGameStatus = (arr) => {
+    for(let i = 0; i < arr.length; i += 3) {
+        if((arr[i] === arr[i+1]) && (arr[i] === arr[i+2]) && arr[i]) {
+            winner = arr[i].toUpperCase();
             endRound()
-            return;
+            return true;
         }
     }
     
-    for (let i = 0; i < (squareValues.length-6); i++) {
-        if((squareValues[i] === squareValues[i+3]) && (squareValues[i] === squareValues[i+6]) && squareValues[i]) {
-            winner = squareValues[i].toUpperCase();
+    for (let i = 0; i < (arr.length-6); i++) {
+        if((arr[i] === arr[i+3]) && (arr[i] === arr[i+6]) && arr[i]) {
+            winner = arr[i].toUpperCase();
             endRound()
-            return;
+            return true;
         }
     }
     
-    if(((squareValues[0] === squareValues[4]) && (squareValues[0] === squareValues[8])) && squareValues[4] || 
-    ((squareValues[2] === squareValues[4]) && (squareValues[2] === squareValues[6]) && squareValues[4])) {
-        winner = squareValues[4].toUpperCase();
+    if(((arr[0] === arr[4]) && (arr[0] === arr[8])) && arr[4] || 
+    ((arr[2] === arr[4]) && (arr[2] === arr[6]) && arr[4])) {
+        winner = arr[4].toUpperCase();
         endRound()
-        return;
+        return true;
     }
     
-    if(winner === '' && !squareValues.includes('')) {
+    if(winner === '' && !arr.includes('')) {
         winner = 'None';
         endRound();
-        return;
     }
-    if(computerTurn === true) {
-        computerMove();
+
+    if (winner === "" && arr.includes('')) {
+        return false;
     }
     
+}
+function runBotAfterUser() {
+    if (computerTurn === true) {
+        computerMove();
+        
+    }
 }
 
 function assignSymbol() {
@@ -92,6 +177,7 @@ function assignSymbol() {
         // computer starts first;
         computerSymbol = "x";
         playerSymbol = "o";
+        // console.log(computerSymbol,playerSymbol)
         computerTurn = true;
         localStorage.setItem("isComputerTurn",computerTurn);
         localStorage.setItem("playerSymbol",playerSymbol);
@@ -101,38 +187,24 @@ function assignSymbol() {
 ;        // player starts first
         computerSymbol = "o"
         playerSymbol = "x";
+        // console.log(computerSymbol,playerSymbol)
         computerTurn = false;
         localStorage.setItem("playerSymbol",playerSymbol);
         localStorage.setItem("computerSymbol",computerSymbol);
         localStorage.setItem("isComputerTurn",computerTurn)
     }
-    whosTurn();
-    
 }
 
+
+assignSymbol();
+
 function computerMove() {
-    let randomGridBlock = Math.floor(Math.random() * 9);
-    
-    while(squareValues[randomGridBlock] !== '') {
-        randomGridBlock = Math.floor(Math.random() * 9);
+       let botIndexPick = botPicksSpot();
+    //    console.log(botPicksSpot());
+       console.log(squareValues);
+        computerTurn = !computerTurn
     }
-    if (computerTurn) {
-    setTimeout(function(){
-        if (squareValues[randomGridBlock] === "") {
-        const selectedSquare = document.getElementById(`square-${randomGridBlock}`);
-        selectedSquare.innerHTML =
-        `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-${computerSymbol}.svg">`;
-        
-        squareValues[randomGridBlock] = computerSymbol;
-        computerTurn = false;
-        localStorage.setItem("isComputerTurn",computerTurn)
-        checkGameStatus();
-        localStorage.setItem("savedValues", JSON.stringify(squareValues));
-        whosTurn();
-        }
-    }, 3000 )
-    }
-    }
+
 
     
     // ====================================================================
@@ -145,58 +217,59 @@ function computerMove() {
         // onReload function
         // ====================================================================
         
-        function onReload () {
+        // function onReload () {
             
-            if ( "playerScore" in localStorage) {
-                playerScore = parseInt(localStorage.getItem( "playerScore"));
-                computerScore = parseInt(localStorage.getItem("computerScore"));
-                drawCount = parseInt(localStorage.getItem("drawCount"));
-                updateScoreCount();
-            }
+        //     if ( "playerScore" in localStorage) {
+        //         playerScore = parseInt(localStorage.getItem( "playerScore"));
+        //         computerScore = parseInt(localStorage.getItem("computerScore"));
+        //         drawCount = parseInt(localStorage.getItem("drawCount"));
+        //         updateScoreCount();
+        //     }
             
-            if("savedValues" in localStorage) {
-                squareValues = JSON.parse(localStorage.getItem("savedValues"));
-                console.log(squareValues);
-            }
+        //     if("savedValues" in localStorage) {
+        //         squareValues = JSON.parse(localStorage.getItem("savedValues"));
+        //         console.log(squareValues);
+        //     }
             
-            if("winner" in localStorage) {
-                winner = localStorage.getItem("winner");
-                    if (winner !== "") {
-                        newGameButton.disabled = false;
-                        winnerEl.innerHTML = `WINNER: ${winner}`;
-                    }
-                }            
-                if ("isComputerTurn" in localStorage && squareValues.includes("")) {
-                    computerTurn = JSON.parse(localStorage.getItem("isComputerTurn"))
-                    playerSymbol = localStorage.getItem("playerSymbol");
-                    computerSymbol = localStorage.getItem("computerSymbol")
-                    whosTurn();
-                } 
+        //     if("winner" in localStorage) {
+        //         winner = localStorage.getItem("winner");
+        //             if (winner !== "") {
+        //                 newGameButton.disabled = false;
+        //                 winnerEl.innerHTML = `WINNER: ${winner}`;
+        //             }
+        //         }            
+        //         if ("isComputerTurn" in localStorage && squareValues.includes("")) {
+        //             computerTurn = JSON.parse(localStorage.getItem("isComputerTurn"))
+        //             playerSymbol = localStorage.getItem("playerSymbol");
+        //             computerSymbol = localStorage.getItem("computerSymbol")
+        //             whosTurn();
+        //         } 
                 
-            }
+        //     }
             
-            onReload();
+        //     onReload();
   
-            for(let i = 0; i < squareValues.length; i++) {
-                if(squareValues[i] === "x") {
-                    let selectedSquare = document.getElementById(`square-${i}`);
-                selectedSquare.innerHTML = 
-                `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-x.svg">`
-            } else if (squareValues[i] === "o") {
-                let selectedSquare = document.getElementById(`square-${i}`);
-                selectedSquare.innerHTML =
-                `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-o.svg">`
-            }
-        }
-        function computerFirstMoveAfterReloaad() {
-        if (computerTurn === true && winner === "") {
-            computerMove();
-        } else if (winner !== "") {
-            whosTurn();
-        }
-    }
+        //     for(let i = 0; i < squareValues.length; i++) {
+        //         if(squareValues[i] === "x") {
+        //             let selectedSquare = document.getElementById(`square-${i}`);
+        //         selectedSquare.innerHTML = 
+        //         `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-x.svg">`
+        //     } else if (squareValues[i] === "o") {
+        //         let selectedSquare = document.getElementById(`square-${i}`);
+        //         selectedSquare.innerHTML =
+        //         `<img src="https://assets.aaonline.io/Module-DOM-API/formative-project-tic-tac-toe/player-o.svg">`
+        //     }
+        // }
+        
+    //     function computerFirstMoveAfterReloaad() {
+    //     if (computerTurn === true && winner === "") {
+    //         computerMove();
+    //     } else if (winner !== "") {
+    //         whosTurn();
+    //     }
+    // }
 
-    computerFirstMoveAfterReloaad();
+    // computerFirstMoveAfterReloaad();
     
     gameBoard.addEventListener("click", event => {
 
@@ -218,10 +291,11 @@ if (id.includes("square-")) {
         localStorage.setItem("savedValues", JSON.stringify(squareValues));
         
         giveUpButton.disabled = false;
-        computerTurn = true;
-        localStorage.setItem("isComputerTurn",computerTurn)
+        // localStorage.setItem("isComputerTurn",computerTurn)
         whosTurn();
-        checkGameStatus();
+        checkGameStatus(squareValues);
+        computerTurn = !computerTurn
+        runBotAfterUser();
 
 })
 
@@ -272,6 +346,4 @@ drawCount = 0;
 computerScore = 0;
 updateScoreCount();
 })
-if (localStorage.getItem("playerSymbol") === null) {
-assignSymbol(); }
 })
